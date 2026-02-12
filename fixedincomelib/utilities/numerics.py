@@ -112,54 +112,6 @@ class Interpolator1DPCP(Interpolator1D):
 
 '''
 
-''' 
-class Interpolator1DPCP(Interpolator1D):
-    def __init__(self, axis1: np.ndarray, values: np.ndarray, extrpolation_method: ExtrapMethod) -> None:
-        super().__init__(axis1, values, InterpMethod.LINEAR, extrpolation_method)
-        assert self.extrap_method_ == ExtrapMethod.FLAT
-
-        if len(axis1) != len(values):
-            print("Length of x input is different from y")
-        else:
-            # Sort arrays based on x
-            idx = np.argsort(axis1)
-            self.axis1_ = np.array(axis1)[idx]
-            self.values_ = np.array(values)[idx]
-            self.length_ = len(self.axis1_)
-
-    def interpolate(self, x_star: float) -> float:
-        bins = self.axis1_
-        bin_idx = np.digitize(x_star, bins, right=False)
-        if bin_idx == 0:
-            return self.values_[0]
-        elif bin_idx > len(bins):
-            return self.values_[-1]
-        else:
-            return self.values_[bin_idx - 1]
-
-    def gradient_wrt_ordinate(self, x_star: float) -> np.ndarray:
-        bins = self.axis1_
-        bin_idx = np.digitize(x_star, bins, right=False)
-        if bin_idx == 0:
-            loc = 0
-        elif bin_idx >= len(bins):
-            loc = len(self.axis1_) - 1
-        else:
-            loc = bin_idx - 1
-        v = np.zeros(self.length_)
-        v[loc] = 1
-        return v
-
-    def integrate(self, l: float, u: float) -> float:
-        x_right = np.append(self.axis1_[1:], np.inf)
-        lengths = np.maximum(0, np.minimum(u, x_right) - np.maximum(l, self.axis1_))
-        return np.sum(self.values_ * lengths)
-
-    def gradient_of_integrated_value_wrt_ordinate(self, l: float, u: float) -> np.ndarray:
-        x_r = np.append(self.axis1_[1:], np.inf)
-        lengths = np.maximum(0, np.minimum(u, x_r) - np.maximum(l, self.axis1_))
-        return lengths
-'''
 
 class Interpolator1DPCP(Interpolator1D):
 
@@ -172,7 +124,6 @@ class Interpolator1DPCP(Interpolator1D):
         assert self.extrap_method_ == ExtrapMethod.FLAT
 
     def interpolate(self, x: float) -> float:
-        ### TODO
         axis = self.axis1_
         values = self.values_
         n = self.length_
@@ -190,7 +141,6 @@ class Interpolator1DPCP(Interpolator1D):
 
 
     def integrate(self, start_x : float, end_x : float):
-        ### TODO
         axis = self.axis1_
         values = self.values_
         n = self.length_
@@ -238,7 +188,6 @@ class Interpolator1DPCP(Interpolator1D):
                 
 
     def gradient_wrt_ordinate(self, x : float):
-        ### TODO
         axis = self.axis1_
         n = self.length_
         grad = np.zeros(n)
@@ -257,9 +206,7 @@ class Interpolator1DPCP(Interpolator1D):
         return grad
         
 
-    def gradient_of_integrated_value_wrt_ordinate(self, start_x : float, end_x : float):
-        ### TODO
-        
+    def gradient_of_integrated_value_wrt_ordinate(self, start_x : float, end_x : float):        
         if start_x == end_x:
             return np.zeros(self.length_)
 
@@ -272,21 +219,18 @@ class Interpolator1DPCP(Interpolator1D):
         n = self.length_
         overlap = np.zeros(n)
 
-        # Left wing: 
         if start_x < axis[0]:
             left = start_x
             right = min(end_x, axis[0])
             if right > left:
                 overlap[0] = right - left
 
-        # Interior buckets: 
         for i in range(n - 1):
             left = max(start_x, axis[i])
             right = min(end_x, axis[i + 1])
             if right > left:
                 overlap[i + 1] += right - left
 
-        # Right wing: 
         if end_x > axis[-1]:
             left = max(start_x, axis[-1])
             right = end_x
